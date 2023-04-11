@@ -24,6 +24,79 @@ void Print(table sudoku){
     std::cout << std::endl;
 }
 
+bool provjera(table sudoku, int p, int k, int a, int b, int number){
+    std::vector<int> provjera;
+    provjera.push_back(number);
+    for(int i = p; i < a; i++){
+        for(int j = k; j < b; j++){
+            if(sudoku.at(i).at(j) != 0)
+                provjera.push_back(sudoku.at(i).at(j));
+        }
+    }
+    std::sort(provjera.begin(), provjera.end());
+    for(int i = 0; i < provjera.size() - 1; i++)
+        if(provjera.at(i) == provjera.at(i + 1)) return false;
+    return true;
+}
+
+bool check(table sudoku, int rowPosition, int columnPosition, int number){
+    for(int i = 0; i < sudoku.size(); i++)
+        if(i != columnPosition)
+            if(number == sudoku[rowPosition][i]) return false;
+
+    for(int i = 0; i < sudoku.size(); i++)
+        if(i != rowPosition)
+            if(number == sudoku[i][columnPosition]) return false;
+
+    //devet 3x3 matrice provjerit
+    if(rowPosition < 3 && columnPosition < 3){
+        return provjera(sudoku, 0, 0, 3, 3, number);
+    } else if(rowPosition < 3 && (columnPosition > 2 && columnPosition < 6)){
+        return provjera(sudoku, 0, 3, 3, 6, number);
+    } else if(rowPosition < 3 && (columnPosition > 5 && columnPosition < 10)){
+        return provjera(sudoku, 0, 6, 3, 9, number);
+    } else if((rowPosition > 2 && rowPosition < 6) && columnPosition < 3){
+        return provjera(sudoku, 3, 0, 6, 3, number);
+    } else if((rowPosition > 2 && rowPosition < 6) && (columnPosition > 2 && columnPosition < 6)){
+        return provjera(sudoku, 3, 3, 6, 6, number);
+    } else if((rowPosition > 2 && rowPosition < 6) && (columnPosition > 5 && columnPosition < 9)){
+        return provjera(sudoku, 3, 6, 6, 9, number);
+    } else if((rowPosition > 5 && rowPosition < 9) && columnPosition < 3){
+        return provjera(sudoku, 6, 0, 9, 3, number);
+    } else if((rowPosition > 5 && rowPosition < 9) && (columnPosition > 2 && columnPosition < 6)){
+        return provjera(sudoku, 6, 3, 9, 6, number);
+    } else if((rowPosition > 5 && rowPosition < 9) && (columnPosition > 5 && columnPosition < 9)){
+        return provjera(sudoku, 6, 6, 9, 9, number);
+    }
+    return true;
+}
+bool fullSudokuCheck(table sudoku){
+    for(int i = 0; i < sudoku.size(); i++)
+        for(int j = 0; j < sudoku.size(); j++)
+            if(sudoku[i][j] == 0) return false;
+    return true;
+}
+
+void Solver(table &sudoku, std::vector<std::pair<int, int>> slots, int position){
+    if(fullSudokuCheck(sudoku)) exit;//return sudoku;
+    while(position < slots.size()){
+        if(sudoku[slots[position].first][slots[position].second] == 9){
+            sudoku[slots[position].first][slots[position].second] = 0;
+            position--; continue;
+        }
+        for(int i = sudoku[slots[position].first][slots[position].second] + 1; i < 10; i++){
+            if(check(sudoku, slots[position].first, slots[position].second, i)){
+                sudoku[slots[position].first][slots[position].second] = i;
+                break;
+            } else if (i == 9) {
+                sudoku[slots[position].first][slots[position].second] = 0;
+                position-=2;
+            }
+        }
+        position++;
+    }
+}
+
 int main(){
     table probniSudoku(9, std::vector<int> (9, 0));
     std::vector<std::pair<int, int>> emptySlots;
@@ -45,6 +118,11 @@ int main(){
         for(int j = 0; j < probniSudoku.size(); j++){
             if(probniSudoku[i][j] == 0) emptySlots.push_back(std::make_pair(i, j));
         }
+    }
+    try{
+        Solver(probniSudoku, emptySlots, 0);
+    } catch(...){
+        return 0;
     }
     Print(probniSudoku);
     return 0;
